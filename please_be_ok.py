@@ -5,17 +5,26 @@ import seaborn as sns
 # %matplotlib inline
 from sklearn.cluster import KMeans
 import sklearn
-from sklearn import svm
-from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+#Import models
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import svm
+from sklearn.svm import SVC
+#Model evaluation
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import precision_score, recall_score,f1_score
+from sklearn.metrics import plot_roc_curve
+from sklearn.metrics import classification_report
+
 
 data = pd.read_csv(r'C:\Users\Maya\school\second year\semester B\Data Minning\music_proj\data\spotify_data_genre_cleaned.csv')
 
-# pd.set_option("display.max_rows", None, "display.max_columns", None)
-# print(df)
-# for col in data.columns:
-#     print(col)
+data = data[data.genre != 'A Capella']
 
 Z = data[['genre','acousticness','danceability','energy','instrumentalness','liveness','loudness','speechiness','tempo','valence']]
 CHARACTERISTICS = ['acousticness','danceability','energy','instrumentalness','liveness','loudness','speechiness','tempo','valence']
@@ -90,7 +99,7 @@ def convert_to_numeric_only(df):
     # time_signature_dict = {'4/4': 4, '5/4': 5, '6/4': 6, '7/4': 7}
 
     # df['time_signature'] = df['time_signature'].replace(time_signature_dict)
-    df['mode'] = df['mode'].replace(mode_dict, inplace=True)
+    df['mode'] = df['mode'].replace(mode_dict).astype(int)
     df['key'] = df['key'].replace(key_dict).astype(int)
     df['genre'] = df['genre'].replace(genre_dict).astype(int)
     return df
@@ -98,22 +107,46 @@ def convert_to_numeric_only(df):
 df = convert_to_numeric_only(relevant_data)
 df.replace([np.inf, -np.inf], np.nan, inplace=True)
 df = df.reset_index()
-print(df.shape)
 
 
-X = df.iloc[:, 2:]
-y = df.iloc[:, 1]
+
+X = df.iloc[:, 3:]
+y = df.iloc[:, 2]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=13)
 
-# sc = StandardScaler()
-# X_train = sc.fit_transform(X_train)
-# X_test = sc.fit_transform(X_test)
-# clf = svm.SVC()
-# clf.fit(X_train, y_train)
-# pred_clf = clf.predict(X_test)
-# print(sklearn.metrics.accuracy_score(y_test, pred_clf))
+# models={"LogReg":LogisticRegression(),
+#        "KNN":KNeighborsClassifier(),
+#        "Random Forest":RandomForestClassifier(),
+#         "SVC": SVC()}
 
-svcclassifier = SVC(kernel='tanh')
-svcclassifier.fit(X_train, y_train)
-y_pred = svcclassifier.predict(X_test)
-print(y_pred)
+# def fit_and_score (models,X_train,X_test,y_train,y_test):
+#     """
+#     Fits and evaluates given machine learning models
+#     """
+#     np.random.seed(1)
+#     model_scores={}
+#     for name , model in models.items():
+#         model.fit(X_train,y_train)
+#         model_scores[name]=model.score(X_test,y_test)
+#     return model_scores
+
+
+#fit the logistic regression to the data
+LR_model = LogisticRegression().fit(X_train,y_train)
+
+#print the coefficient of determination:
+LR_model_score = LR_model.score(X_test, y_test)
+print('coefficient of Logistic Regression determination is: ', LR_model_score) #before erasing A capella the result was: 0.12544849070791708, now: 0.09300638421358097
+
+
+KNN_model = KNeighborsClassifier().fit(X_train, y_train)
+KNN_model_score = KNN_model.score(X_test, y_test)
+print('coefficient of KNN determination is: ', KNN_model_score) #result is 0.33316674190150686
+
+RF_model = RandomForestClassifier().fit(X_train, y_train)
+RF_model_score = RF_model.score(X_test, y_test)
+print('coefficient of Random Forest determination is: ', RF_model_score) #result is 0.8477891704821479!!!!!!!!
+
+# SVC_model = SVC().fit(X_train, y_train)
+# SVC_model_score = SVC_model.score(X_train, y_train)
+# print('coefficient of SVC determination is: ', SVC_model_score)
